@@ -19,16 +19,9 @@ tinyxml2::XMLElement* getValueNode(tinyxml2::XMLElement* infonode,const char* ke
 	}
 	return NULL;
 }
-int main(int agrc,char** argv)
+
+int covert(std::string& filename)
 {
-	if (agrc < 2 )
-	{
-		std::cout << "arg error";
-		return 1;
-	}
-
-	const char* filename = argv[1];
-
 	std::string plistName = filename;
 	plistName += ".plist";
 
@@ -39,7 +32,7 @@ int main(int agrc,char** argv)
 		return 1;
 	}
 
-	std::string imageName = argv[1];
+	std::string imageName = filename;
 	imageName += ".png";
 
 	CxImage img;
@@ -78,8 +71,9 @@ int main(int agrc,char** argv)
 	}
 
 
-	_mkdir(filename);
+	_mkdir(filename.c_str());
 
+	int count = 0;
 	tinyxml2::XMLElement* namenode = node->FirstChildElement();
 	while (namenode && !strcmp(namenode->Name(), "key"))
 	{
@@ -185,7 +179,7 @@ int main(int agrc,char** argv)
 		CxImage dst;
 		if (!img.Crop(posx, posy, rotated ? posx + height : posx + width, rotated ? posy + width : posy + height, &dst))
 		{
-			std::cout << "crop error" << namenode->GetText();
+			std::cout << "crop error:" << namenode->GetText();
 			return 1;
 		}
 		if (rotated)
@@ -196,7 +190,7 @@ int main(int agrc,char** argv)
 		const char* ext = strrchr(namenode->GetText(), '.');
 		if (!ext)
 		{
-			std::cout << "crop type error" << namenode->GetText();
+			std::cout << "crop type error:" << namenode->GetText();
 			return 1;
 		}
 		uint32_t  imgtype = CxImage::GetTypeIdFromName(++ext);
@@ -206,10 +200,44 @@ int main(int agrc,char** argv)
 		_filename += namenode->GetText();
 		dst.Save(_filename.c_str(), imgtype);
 
+
+		count++;
+		std::cout << namenode->GetText() << std::endl;;
+
 		namenode = infonode->NextSiblingElement();
 	}
 
+	std::cout << std::endl << "ok:" << count << std::endl;;
 
+	return 0;
+}
+int main(int agrc,char** argv)
+{
+	if (agrc < 2 )
+	{
+		std::cout << "arg error";
+		return 1;
+	}
+
+	std::string filename = argv[1];
+
+	auto _pos = filename.rfind('.');
+	while ( _pos!=std::string::npos)
+	{
+		auto _pos1 = filename.rfind('\\');
+		if ( _pos1!=std::string::npos&&_pos1>_pos)
+			break;
+
+		auto _pos2 = filename.rfind('/');
+		if ( _pos2!=std::string::npos&&_pos2>_pos)
+			break;
+
+		filename = filename.substr(0,_pos);
+		break;
+	}
+
+	covert(filename);
+	system("pause");
     return 0;
 }
 
